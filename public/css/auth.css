@@ -1,0 +1,200 @@
+/* Auth Pages Styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-body {
+    padding: 3rem;
+}
+
+/* Password Strength Bar */
+.password-strength {
+    margin-top: 10px;
+}
+
+.strength-bar {
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 3px;
+}
+
+#strengthText {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Requirements Checklist */
+.requirements {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.requirements div {
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.requirements i {
+    width: 16px;
+    text-align: center;
+}
+
+.requirements i.fa-times {
+    color: #dc3545;
+}
+
+.requirements i.fa-check {
+    color: #28a745;
+}
+
+/* Form Controls */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.form-control {
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    padding: 10px 14px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #218838;
+}
+
+/* Links */
+a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+/* Headings */
+h1 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+h5 {
+    color: #555;
+}
+
+/* Text Colors */
+.text-muted {
+    color: #6c757d !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* reCAPTCHA */
+.g-recaptcha {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .card {
+        margin: 20px;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Success/Error Messages */
+.success-message {
+    color: #28a745;
+    padding: 12px;
+    background-color: #d4edda;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+.error-message {
+    color: #721c24;
+    padding: 12px;
+    background-color: #f8d7da;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    display: none;
+}

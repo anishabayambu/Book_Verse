@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container py-5">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/shop/books">Books</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><%= book.title %></li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <!-- Book Image -->
+            <div class="col-md-4">
+                <% if (book.cover_image) { %>
+                    <img src="<%= book.cover_image %>" alt="<%= book.title %>" class="img-fluid rounded shadow-lg" style="width: 100%; max-width: 400px;">
+                <% } else { %>
+                    <div class="bg-light rounded shadow-lg d-flex align-items-center justify-content-center" style="width: 100%; height: 500px;">
+                        <i class="fas fa-book" style="font-size: 100px; color: #ccc;"></i>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Book Details -->
+            <div class="col-md-8">
+                <h1 class="mb-2"><%= book.title %></h1>
+                <p class="text-muted">by <strong><%= book.author %></strong></p>
+
+                <div class="mb-3">
+                    <span class="badge bg-secondary"><%= book.category %></span>
+                </div>
+
+                <div class="mb-4">
+                    <h2 class="text-primary fw-bold">Rs. <%= parseFloat(book.price).toFixed(2) %></h2>
+                </div>
+
+                <div class="mb-4">
+                    <h5>About This Book</h5>
+                    <p><%= book.description || 'No description available.' %></p>
+                </div>
+
+                <div class="mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>ISBN:</strong> <%= book.isbn || 'N/A' %>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Published:</strong> <%= book.published_year || 'N/A' %>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <% if (book.stock > 0) { %>
+                        <span class="badge bg-success">In Stock (<%= book.stock %> available)</span>
+                    <% } else { %>
+                        <span class="badge bg-danger">Out of Stock</span>
+                    <% } %>
+                </div>
+
+                <!-- Add to Cart -->
+                <% if (isAuthenticated && book.stock > 0) { %>
+                    <div class="d-flex gap-2">
+                        <input type="number" id="quantity" class="form-control" style="max-width: 100px;" min="1" max="<%= book.stock %>" value="1">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="addToCart(<%= book.id %>)">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                    </div>
+                <% } else if (!isAuthenticated) { %>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-sign-in-alt"></i> <a href="/login">Login</a> to add items to your cart.
+                    </div>
+                <% } else { %>
+                    <button class="btn btn-secondary btn-lg" disabled>
+                        <i class="fas fa-ban"></i> Out of Stock
+                    </button>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Related Books (Optional) -->
+        <div class="mt-5">
+            <h3 class="mb-4">You May Also Like</h3>
+            <p class="text-muted">More books in the <%= book.category %> category coming soon...</p>
+        </div>
+    </div>
+
+    <%- include('../partials/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function addToCart(bookId) {
+            const quantity = document.getElementById('quantity').value;
+
+            if (!quantity || quantity < 1) {
+                alert('Please select a valid quantity');
+                return;
+            }
+
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    bookId: bookId,
+                    quantity: parseInt(quantity)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    // Optionally redirect to cart
+                    // window.location.href = '/cart';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to add to cart');
+            });
+        }
+    </script>
+</body>
+</html>

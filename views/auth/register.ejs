@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        .alert-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            display: none;
+        }
+        .strength-bar {
+            height: 5px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .g-recaptcha {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .recaptcha-error {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="alert-custom" id="alertMessage">
+        <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
+            <span id="alertText"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <div class="row justify-content-center w-100" style="max-width: 600px; margin: 0 auto;">
+            <div class="col-12">
+                <div class="card shadow-lg">
+                    <div class="card-body p-5">
+                        <h1 class="text-center mb-4">
+                            <i class="fas fa-book text-primary"></i> BookVerse Register
+                        </h1>
+
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="password-strength mt-2">
+                                    <div class="strength-bar">
+                                        <div id="strengthIndicator" class="strength-fill"></div>
+                                    </div>
+                                    <small id="strengthText" class="d-block mt-1">Strength: <span>-</span></small>
+                                </div>
+                                <div class="requirements mt-2 small text-muted">
+                                    <div><i class="fas fa-times" id="req-uppercase"></i> Uppercase letter</div>
+                                    <div><i class="fas fa-times" id="req-lowercase"></i> Lowercase letter</div>
+                                    <div><i class="fas fa-times" id="req-number"></i> Number</div>
+                                    <div><i class="fas fa-times" id="req-special"></i> Special character</div>
+                                    <div><i class="fas fa-times" id="req-minlength"></i> 8+ characters</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            </div>
+
+                            <!-- reCAPTCHA Section -->
+                            <div class="mb-3">
+                                <div class="g-recaptcha" 
+                                     data-sitekey="<%= recaptchaSiteKey %>"
+                                     data-callback="onRecaptchaSuccess"
+                                     data-expired-callback="onRecaptchaExpired">
+                                </div>
+                                <div id="recaptchaError" class="recaptcha-error">
+                                    <i class="fas fa-exclamation-circle"></i> Please complete the reCAPTCHA verification
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="fas fa-shield-alt"></i> This helps us prevent automated registrations
+                                </small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mb-3" id="registerBtn">
+                                <i class="fas fa-user-plus"></i> Register
+                            </button>
+                        </form>
+
+                        <p class="text-center">
+                            Already have an account? <a href="/login">Login here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let recaptchaCompleted = false;
+
+        // reCAPTCHA callback functions
+        function onRecaptchaSuccess() {
+            recaptchaCompleted = true;
+            document.getElementById('recaptchaError').style.display = 'none';
+            console.log('reCAPTCHA completed successfully');
+        }
+
+        function onRecaptchaExpired() {
+            recaptchaCompleted = false;
+            document.getElementById('recaptchaError').style.display = 'block';
+            document.getElementById('recaptchaError').innerHTML = '<i class="fas fa-exclamation-circle"></i> reCAPTCHA expired. Please verify again.';
+            console.log('reCAPTCHA expired');
+        }
+
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const strengthIndicator = document.getElementById('strengthIndicator');
+        const strengthText = document.getElementById('strengthText');
+        const registerBtn = document.getElementById('registerBtn');
+
+        const requirements = {
+            'uppercase': /[A-Z]/,
+            'lowercase': /[a-z]/,
+            'number': /[0-9]/,
+            'special': /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
+            'minlength': /.{8,}/
+        };
+
+        function showAlert(message, type = 'danger') {
+            const alertDiv = document.getElementById('alertMessage');
+            const alertText = document.getElementById('alertText');
+            const alertClass = alertDiv.querySelector('.alert');
+            
+            alertText.textContent = message;
+            alertClass.className = `alert alert-${type} alert-dismissible fade show mb-0`;
+            alertDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let score = 0;
+
+            Object.entries(requirements).forEach(([key, regex]) => {
+                const elem = document.getElementById(`req-${key}`);
+                if (regex.test(password)) {
+                    elem.classList.remove('fa-times');
+                    elem.classList.add('fa-check', 'text-success');
+                    score++;
+                } else {
+                    elem.classList.remove('fa-check', 'text-success');
+                    elem.classList.add('fa-times');
+                }
+            });
+
+            const strengthLevels = ['', 'Weak', 'Weak', 'Medium', 'Strong', 'Very Strong'];
+            const strengthColor = ['', 'danger', 'danger', 'warning', 'info', 'success'];
+            
+            strengthIndicator.style.width = (score * 20) + '%';
+            strengthIndicator.className = `strength-fill bg-${strengthColor[score]}`;
+            strengthText.innerHTML = `Strength: <span class="text-${strengthColor[score]}">${strengthLevels[score]}</span>`;
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Disable button to prevent double submission
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Get reCAPTCHA response
+            let recaptchaToken;
+            try {
+                recaptchaToken = grecaptcha.getResponse();
+            } catch (e) {
+                console.error('reCAPTCHA error:', e);
+                showAlert('reCAPTCHA not loaded properly. Please refresh the page.');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                return;
+            }
+
+            // Client-side validation
+            if (!username) {
+                showAlert('Username is required');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                return;
+            }
+
+            if (!email) {
+                showAlert('Email is required');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                return;
+            }
+
+            if (!email.includes('@') || !email.includes('.')) {
+                showAlert('Please enter a valid email address');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match!');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                return;
+            }
+
+            if (password.length < 8) {
+                showAlert('Password must be at least 8 characters long');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                return;
+            }
+
+            // Check reCAPTCHA
+            if (!recaptchaToken || recaptchaToken.length === 0) {
+                document.getElementById('recaptchaError').style.display = 'block';
+                document.getElementById('recaptchaError').innerHTML = '<i class="fas fa-exclamation-circle"></i> Please complete the reCAPTCHA verification';
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                return;
+            }
+
+            const role = 'user';
+
+            try {
+                console.log('Sending registration request...', { username, email, role, recaptchaToken: recaptchaToken.substring(0, 20) + '...' });
+                
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password,
+                        confirmPassword: confirmPassword,
+                        role: role,
+                        recaptchaToken: recaptchaToken
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (response.ok && data.success) {
+                    showAlert(data.message || 'Registration successful! Redirecting to login...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    showAlert(data.message || data.error || 'Registration failed. Please try again.');
+                    // Reset reCAPTCHA on failure
+                    if (typeof grecaptcha !== 'undefined') {
+                        grecaptcha.reset();
+                    }
+                    recaptchaCompleted = false;
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                }
+            } catch (error) {
+                console.error('Detailed error:', error);
+                showAlert('Network error: ' + error.message + '. Please check if the server is running.');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+            }
+        });
+
+        // Real-time password match validation
+        confirmPasswordInput.addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            if (this.value && this.value !== password) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Check if reCAPTCHA is loaded
+        window.addEventListener('load', function() {
+            if (typeof grecaptcha === 'undefined') {
+                console.error('reCAPTCHA failed to load');
+                showAlert('reCAPTCHA failed to load. Please refresh the page.', 'warning');
+            } else {
+                console.log('reCAPTCHA loaded successfully');
+            }
+        });
+    </script>
+</body>
+</html>

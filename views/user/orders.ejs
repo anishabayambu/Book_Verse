@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container py-5">
+        <h1 class="mb-4">
+            <i class="fas fa-shopping-bag"></i> My Orders
+        </h1>
+
+        <% if (orders && orders.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td><strong>#<%= order.id %></strong></td>
+                                <td>Rs. <%= parseFloat(order.total_amount).toFixed(2) %></td>
+                                <td>
+                                    <% 
+                                        let badgeClass = 'badge-warning';
+                                        if (order.order_status === 'delivered') badgeClass = 'badge-success';
+                                        if (order.order_status === 'cancelled') badgeClass = 'badge-danger';
+                                        if (order.order_status === 'shipped') badgeClass = 'badge-info';
+                                    %>
+                                    <span class="badge <%= badgeClass %>">
+                                        <%= order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1) %>
+                                    </span>
+                                </td>
+                                <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                                <td>
+                                    <a href="/user/orders/<%= order.id %>" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-box-open" style="font-size: 60px; color: #ccc; margin-bottom: 20px;"></i>
+                    <h5>No orders yet</h5>
+                    <p class="text-muted">Start shopping to see your orders here</p>
+                    <a href="/shop/books" class="btn btn-primary">
+                        <i class="fas fa-book"></i> Browse Books
+                    </a>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <%- include('../partials/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

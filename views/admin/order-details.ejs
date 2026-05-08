@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Admin Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/admin/dashboard">
+                <i class="fas fa-book"></i> BookVerse Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/books">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/orders">Orders</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> <%= username %>
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-5">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1><i class="fas fa-box"></i> Order #<%= order.id %></h1>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="/admin/orders" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Orders
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Order Info -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Order Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted">Order ID</label>
+                                <p class="h6">#<%= order.id %></p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted">Order Date</label>
+                                <p class="h6"><%= new Date(order.created_at).toLocaleString() %></p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted">Customer Name</label>
+                                <p class="h6"><%= order.username %></p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted">Customer Email</label>
+                                <p class="h6"><a href="mailto:<%= order.email %>"><%= order.email %></a></p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="text-muted">Delivery Address</label>
+                                <p class="h6"><%= order.delivery_address %></p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted">Phone Number</label>
+                                <p class="h6"><%= order.phone_number %></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Order Items</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Book Title</th>
+                                        <th>Author</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% items.forEach(item => { %>
+                                        <tr>
+                                            <td><strong><%= item.title %></strong></td>
+                                            <td><%= item.author %></td>
+                                            <td><%= item.quantity %></td>
+                                            <td>Rs. <%= parseFloat(item.unit_price).toFixed(2) %></td>
+                                            <td>Rs. <%= parseFloat(item.subtotal).toFixed(2) %></td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Subtotal:</span>
+                            <strong>Rs. <%= parseFloat(order.total_amount).toFixed(2) %></strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="h6">Total Amount:</span>
+                            <h6 class="text-success">Rs. <%= parseFloat(order.total_amount).toFixed(2) %></h6>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Update Order Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="text-muted">Current Status</label>
+                            <div>
+                                <% 
+                                    let badgeClass = 'badge-warning';
+                                    if (order.order_status === 'confirmed') badgeClass = 'badge-info';
+                                    if (order.order_status === 'shipped') badgeClass = 'badge-primary';
+                                    if (order.order_status === 'delivered') badgeClass = 'badge-success';
+                                    if (order.order_status === 'cancelled') badgeClass = 'badge-danger';
+                                %>
+                                <span class="badge <%= badgeClass %> fs-6">
+                                    <%= order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1) %>
+                                </span>
+                            </div>
+                        </div>
+
+                        <label class="form-label">Change Status</label>
+                        <select class="form-select" id="statusSelect">
+                            <option value="pending" <%= order.order_status === 'pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="confirmed" <%= order.order_status === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
+                            <option value="shipped" <%= order.order_status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                            <option value="delivered" <%= order.order_status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                            <option value="cancelled" <%= order.order_status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                        </select>
+
+                        <button class="btn btn-primary w-100 mt-3" onclick="updateOrderStatus()">
+                            <i class="fas fa-save"></i> Update Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <p class="text-center text-white-50">&copy; 2024 BookVerse Admin Panel. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function updateOrderStatus() {
+            const newStatus = document.getElementById('statusSelect').value;
+            const orderId = <%= order.id %>;
+
+            try {
+                const response = await fetch(`/admin/orders/${orderId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Order status updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update order status');
+            }
+        }
+    </script>
+</body>
+</html>

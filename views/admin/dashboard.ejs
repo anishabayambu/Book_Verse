@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .stat-card {
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .low-stock-alert {
+            animation: pulse 2s infinite;
+            border-left: 4px solid #ffc107;
+        }
+        .user-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 500;
+        }
+        .user-active {
+            background-color: #d1e7dd !important;
+            color: #0a3622 !important;
+        }
+        .user-inactive {
+            background-color: #f8d7da !important;
+            color: #842029 !important;
+        }
+        .user-admin {
+            background-color: #cfe2ff !important;
+            color: #052c65 !important;
+        }
+        .table-actions i {
+            margin: 0 5px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .table-actions i:hover {
+            opacity: 0.7;
+        }
+        .status-badge {
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+        .nav-link.active {
+            font-weight: bold;
+            border-bottom: 2px solid white;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/admin/dashboard">
+                <i class="fas fa-book"></i> BookVerse Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('dashboard')">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('books')">Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('users')">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('orders')">Orders</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> <%= username %>
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Dashboard Section -->
+        <div id="dashboardSection">
+            <h1 class="mb-4">
+                <i class="fas fa-chart-pie"></i> Admin Dashboard
+            </h1>
+
+            <!-- Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card bg-primary text-white" onclick="showSection('books')">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Books</h5>
+                            <h2 class="fw-bold"><%= stats.totalBooks %></h2>
+                            <small>Click to manage books</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card bg-success text-white" onclick="showSection('users')">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Users</h5>
+                            <h2 class="fw-bold"><%= stats.totalUsers %></h2>
+                            <small>Click to manage users</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card bg-info text-white" onclick="showSection('orders')">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Orders</h5>
+                            <h2 class="fw-bold"><%= stats.totalOrders %></h2>
+                            <small>Click to view orders</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card bg-warning text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Revenue</h5>
+                            <h2 class="fw-bold">Rs. <%= stats.totalRevenue %></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Stock Alert -->
+            <% if (stats.lowStockBooks && stats.lowStockBooks.length > 0) { %>
+            <div class="alert alert-warning low-stock-alert mb-4">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <strong>Low Stock Alert!</strong> The following books are running low:
+                <ul class="mb-0 mt-2">
+                    <% stats.lowStockBooks.forEach(book => { %>
+                        <li><strong><%= book.title %></strong> - Only <%= book.stock %> left in stock</li>
+                    <% }) %>
+                </ul>
+            </div>
+            <% } %>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <a href="/admin/books/add" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-plus text-primary"></i> Add New Book
+                                </a>
+                                <a href="#" onclick="showSection('books')" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-list text-success"></i> Manage Books
+                                </a>
+                                <a href="#" onclick="showSection('users')" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-users text-info"></i> Manage Users
+                                </a>
+                                <a href="#" onclick="showSection('orders')" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-shopping-bag text-warning"></i> View Orders
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">System Info</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2"><strong>BookVerse Online Store</strong></p>
+                            <p class="text-muted">Version: 2.0.0</p>
+                            <p class="text-muted">Admin Panel with Stock & User Management</p>
+                            <p class="text-muted small">For support, contact: info@bookverse.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Books Section -->
+        <div id="booksSection" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-book"></i> Book Management</h1>
+                <a href="/admin/books/add" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Book
+                </a>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4 mb-2">
+                    <select id="stockFilter" class="form-select" onchange="filterBooks()">
+                        <option value="all">All Books</option>
+                        <option value="low">Low Stock (≤ 10)</option>
+                        <option value="out">Out of Stock (0)</option>
+                        <option value="normal">Normal Stock (> 10)</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <input type="text" id="searchBook" class="form-control" placeholder="Search by title or author..." onkeyup="filterBooks()">
+                </div>
+                <div class="col-md-4 mb-2">
+                    <button class="btn btn-secondary w-100" onclick="loadBooks()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                  </tr>
+                            </thead>
+                            <tbody id="booksTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Section - WITH ACTIVE/INACTIVE STATUS -->
+        <div id="usersSection" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-users"></i> User Management</h1>
+                <div>
+                    <button class="btn btn-secondary me-2" onclick="loadUsers()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="btn btn-primary" onclick="showAddUserModal()">
+                        <i class="fas fa-user-plus"></i> Add New User
+                    </button>
+                </div>
+            </div>
+
+            <!-- User Filters -->
+            <div class="row mb-3">
+                <div class="col-md-3 mb-2">
+                    <select id="userRoleFilter" class="form-select" onchange="filterUsers()">
+                        <option value="all">All Roles</option>
+                        <option value="user">Regular Users</option>
+                        <option value="admin">Admins</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <select id="userStatusFilter" class="form-select" onchange="filterUsers()">
+                        <option value="all">All Status</option>
+                        <option value="active">Active Only</option>
+                        <option value="inactive">Inactive Only</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <input type="text" id="searchUser" class="form-control" placeholder="Search by username or email..." onkeyup="filterUsers()">
+                </div>
+                <div class="col-md-2 mb-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetUserFilters()">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div id="ordersSection" style="display: none;">
+            <h1 class="mb-4"><i class="fas fa-shopping-cart"></i> Order Management</h1>
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalTitle">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <input type="hidden" id="userId">
+                        <div class="mb-3">
+                            <label for="userUsername" class="form-label">Username *</label>
+                            <input type="text" class="form-control" id="userUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userEmail" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="userEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="userPassword">
+                            <small class="text-muted" id="passwordHint">Leave blank to keep existing password</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userRole" class="form-label">Role</label>
+                            <select class="form-select" id="userRole">
+                                <option value="user">Regular User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userStatus" class="form-label">Status</label>
+                            <select class="form-select" id="userStatus">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">Save User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0 text-white-50">&copy; 2024 BookVerse Admin Panel. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentBooks = [];
+        let currentUsers = [];
+
+        // Section navigation
+        function showSection(section) {
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('booksSection').style.display = 'none';
+            document.getElementById('usersSection').style.display = 'none';
+            document.getElementById('ordersSection').style.display = 'none';
+            
+            if (section === 'dashboard') {
+                document.getElementById('dashboardSection').style.display = 'block';
+            } else if (section === 'books') {
+                document.getElementById('booksSection').style.display = 'block';
+                loadBooks();
+            } else if (section === 'users') {
+                document.getElementById('usersSection').style.display = 'block';
+                loadUsers();
+            } else if (section === 'orders') {
+                document.getElementById('ordersSection').style.display = 'block';
+                loadOrders();
+            }
+        }
+
+        // ==================== BOOK MANAGEMENT ====================
+        async function loadBooks() {
+            try {
+                const response = await fetch('/admin/api/books');
+                const books = await response.json();
+                currentBooks = books;
+                renderBooksTable(books);
+            } catch (error) {
+                console.error('Error loading books:', error);
+                showAlert('Failed to load books', 'danger');
+            }
+        }
+
+        function renderBooksTable(books) {
+            const tbody = document.getElementById('booksTableBody');
+            if (!books || books.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No books found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            books.forEach(book => {
+                let stockClass = '';
+                let stockStatus = '';
+                
+                if (book.stock <= 0) {
+                    stockClass = 'stock-out';
+                    stockStatus = '<span class="badge bg-danger">Out of Stock</span>';
+                } else if (book.stock <= 10) {
+                    stockClass = 'stock-low';
+                    stockStatus = '<span class="badge bg-warning">Low Stock</span>';
+                } else {
+                    stockClass = 'stock-normal';
+                    stockStatus = '<span class="badge bg-success">In Stock</span>';
+                }
+                
+                const row = document.createElement('tr');
+                row.className = stockClass;
+                row.innerHTML = `
+                    <td><strong>${escapeHtml(String(book.id))}</strong></td>
+                    <td><strong>${escapeHtml(book.title)}</strong></td>
+                    <td>${escapeHtml(book.author)}</td>
+                    <td>Rs. ${parseFloat(book.price).toFixed(2)}</td>
+                    <td><strong>${book.stock}</strong> units</td>
+                    <td>${stockStatus}</td>
+                    <td class="table-actions">
+                        <a href="/admin/books/edit/${book.id}" class="text-primary me-2" title="Edit Book">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <i class="fas fa-trash text-danger" onclick="deleteBook(${book.id})" title="Delete Book"></i>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterBooks() {
+            const filter = document.getElementById('stockFilter').value;
+            const search = document.getElementById('searchBook').value.toLowerCase();
+            
+            let filtered = [...currentBooks];
+            
+            if (filter === 'low') {
+                filtered = filtered.filter(book => book.stock > 0 && book.stock <= 10);
+            } else if (filter === 'out') {
+                filtered = filtered.filter(book => book.stock === 0);
+            } else if (filter === 'normal') {
+                filtered = filtered.filter(book => book.stock > 10);
+            }
+            
+            if (search) {
+                filtered = filtered.filter(book => 
+                    book.title.toLowerCase().includes(search) || 
+                    book.author.toLowerCase().includes(search)
+                );
+            }
+            
+            renderBooksTable(filtered);
+        }
+
+        async function deleteBook(id) {
+            if (confirm('Are you sure you want to delete this book?')) {
+                try {
+                    const response = await fetch(`/admin/books/${id}`, { method: 'DELETE' });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        loadBooks();
+                        showAlert('Book deleted successfully!', 'success');
+                    } else {
+                        showAlert(data.message || 'Error deleting book', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error deleting book:', error);
+                    showAlert('Error deleting book', 'danger');
+                }
+            }
+        }
+
+        // ==================== USER MANAGEMENT WITH ACTIVE/INACTIVE STATUS ====================
+        async function loadUsers() {
+            try {
+                console.log('Loading users...');
+                const response = await fetch('/admin/api/users');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const users = await response.json();
+                console.log('Users loaded:', users);
+                currentUsers = users;
+                renderUsersTable(users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showAlert('Failed to load users: ' + error.message, 'danger');
+                document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Error loading users</td></tr>';
+            }
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No users found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const roleBadge = user.role === 'admin' ? 
+                    '<span class="user-badge user-admin">Admin</span>' : 
+                    '<span class="user-badge user-active">User</span>';
+                
+                // Show proper Active/Inactive status - MAKE IT CLICKABLE
+                const isActive = user.is_active !== false;
+                const statusBadge = isActive ?
+                    '<span class="user-badge user-active status-badge" onclick="toggleUserStatus(' + user.id + ', false)" title="Click to deactivate">✓ Active</span>' :
+                    '<span class="user-badge user-inactive status-badge" onclick="toggleUserStatus(' + user.id + ', true)" title="Click to activate">✗ Inactive</span>';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td><strong>${escapeHtml(user.username)}</strong></td>
+                    <td>${escapeHtml(user.email)}</td>
+                    <td>${roleBadge}</td>
+                    <td>${statusBadge}</td>
+                    <td class="table-actions">
+                        <i class="fas fa-edit text-primary" onclick="editUser(${user.id})" title="Edit User"></i>
+                        <i class="fas fa-trash text-danger" onclick="deleteUser(${user.id})" title="Delete User"></i>
+                        ${isActive ? 
+                            `<i class="fas fa-ban text-warning" onclick="toggleUserStatus(${user.id}, false)" title="Deactivate User"></i>` :
+                            `<i class="fas fa-check-circle text-success" onclick="toggleUserStatus(${user.id}, true)" title="Activate User"></i>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterUsers() {
+            const roleFilter = document.getElementById('userRoleFilter').value;
+            const statusFilter = document.getElementById('userStatusFilter').value;
+            const search = document.getElementById('searchUser').value.toLowerCase();
+            
+            let filtered = [...currentUsers];
+            
+            // Filter by role
+            if (roleFilter !== 'all') {
+                filtered = filtered.filter(user => user.role === roleFilter);
+            }
+            
+            // Filter by status (Active/Inactive)
+            if (statusFilter === 'active') {
+                filtered = filtered.filter(user => user.is_active !== false);
+            } else if (statusFilter === 'inactive') {
+                filtered = filtered.filter(user => user.is_active === false);
+            }
+            
+            // Filter by search
+            if (search) {
+                filtered = filtered.filter(user => 
+                    user.username.toLowerCase().includes(search) || 
+                    user.email.toLowerCase().includes(search)
+                );
+            }
+            
+            renderUsersTable(filtered);
+        }
+
+        function resetUserFilters() {
+            document.getElementById('userRoleFilter').value = 'all';
+            document.getElementById('userStatusFilter').value = 'all';
+            document.getElementById('searchUser').value = '';
+            renderUsersTable(currentUsers);
+        }
+
+        function showAddUserModal() {
+            document.getElementById('userModalTitle').innerText = 'Add New User';
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('userPassword').required = true;
+            document.getElementById('userPassword').placeholder = 'Enter password';
+            document.getElementById('passwordHint').innerHTML = 'Password is required for new users';
+            document.getElementById('userStatus').value = '1';
+            new bootstrap.Modal(document.getElementById('userModal')).show();
+        }
+
+        async function editUser(id) {
+            try {
+                const response = await fetch(`/admin/api/users/${id}`);
+                const user = await response.json();
+                
+                document.getElementById('userModalTitle').innerText = 'Edit User';
+                document.getElementById('userId').value = user.id;
+                document.getElementById('userUsername').value = user.username;
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userRole').value = user.role;
+                document.getElementById('userStatus').value = user.is_active ? '1' : '0';
+                document.getElementById('userPassword').required = false;
+                document.getElementById('userPassword').placeholder = 'Leave blank to keep current';
+                document.getElementById('passwordHint').innerHTML = 'Leave blank to keep existing password';
+                
+                new bootstrap.Modal(document.getElementById('userModal')).show();
+            } catch (error) {
+                console.error('Error loading user:', error);
+                showAlert('Error loading user', 'danger');
+            }
+        }
+
+        async function saveUser() {
+            const id = document.getElementById('userId').value;
+            const userData = {
+                username: document.getElementById('userUsername').value.trim(),
+                email: document.getElementById('userEmail').value.trim(),
+                role: document.getElementById('userRole').value,
+                is_active: document.getElementById('userStatus').value === '1',
+                password: document.getElementById('userPassword').value
+            };
+            
+            if (!userData.username || !userData.email) {
+                showAlert('Username and email are required', 'danger');
+                return;
+            }
+            
+            if (!id && (!userData.password || userData.password.trim() === '')) {
+                showAlert('Password is required for new users', 'danger');
+                return;
+            }
+            
+            if (id && (!userData.password || userData.password.trim() === '')) {
+                delete userData.password;
+            }
+            
+            const submitBtn = document.querySelector('#userModal .btn-primary');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            submitBtn.disabled = true;
+            
+            try {
+                const url = id ? `/admin/api/users/${id}` : '/admin/api/users';
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+                    await loadUsers();
+                    showAlert(data.message || 'User saved successfully!', 'success');
+                } else {
+                    showAlert(data.error || 'Error saving user', 'danger');
+                }
+            } catch (error) {
+                console.error('Error saving user:', error);
+                showAlert('Error saving user: ' + error.message, 'danger');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function deleteUser(id) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                try {
+                    const response = await fetch(`/admin/api/users/${id}`, { method: 'DELETE' });
+                    
+                    if (response.ok) {
+                        await loadUsers();
+                        showAlert('User deleted successfully!', 'success');
+                    } else {
+                        const data = await response.json();
+                        showAlert(data.error || 'Error deleting user', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    showAlert('Error deleting user', 'danger');
+                }
+            }
+        }
+
+        async function toggleUserStatus(id, activate) {
+            try {
+                const response = await fetch(`/admin/api/users/${id}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ active: activate })
+                });
+                
+                if (response.ok) {
+                    await loadUsers();
+                    showAlert(`User ${activate ? 'activated' : 'deactivated'} successfully!`, 'success');
+                } else {
+                    showAlert('Error updating user status', 'danger');
+                }
+            } catch (error) {
+                console.error('Error toggling user status:', error);
+                showAlert('Error updating user status', 'danger');
+            }
+        }
+
+        // ==================== ORDERS MANAGEMENT ====================
+        async function loadOrders() {
+            try {
+                const response = await fetch('/admin/api/orders');
+                const orders = await response.json();
+                renderOrdersTable(orders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showAlert('Failed to load orders', 'danger');
+            }
+        }
+
+        function renderOrdersTable(orders) {
+            const tbody = document.getElementById('ordersTableBody');
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No orders found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            orders.forEach(order => {
+                const statusBadge = getOrderStatusBadge(order.status);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>#${order.id}</strong></td>
+                    <td>${escapeHtml(order.customer_name)}</td>
+                    <td>Rs. ${parseFloat(order.total_amount).toFixed(2)}</td>
+                    <td>${statusBadge}</td>
+                    <td>${new Date(order.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewOrderDetails(${order.id})">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getOrderStatusBadge(status) {
+            const badges = {
+                'pending': '<span class="badge bg-warning">Pending</span>',
+                'processing': '<span class="badge bg-info">Processing</span>',
+                'shipped': '<span class="badge bg-primary">Shipped</span>',
+                'delivered': '<span class="badge bg-success">Delivered</span>',
+                'cancelled': '<span class="badge bg-danger">Cancelled</span>'
+            };
+            return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+        }
+
+        function viewOrderDetails(orderId) {
+            window.location.href = `/admin/orders/${orderId}`;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alertDiv.style.zIndex = '9999';
+            alertDiv.style.minWidth = '300px';
+            alertDiv.style.maxWidth = '500px';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => {
+                if (alertDiv) alertDiv.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
